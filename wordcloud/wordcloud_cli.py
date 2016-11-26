@@ -16,7 +16,7 @@ def main(args):
     wordcloud = wc.WordCloud(stopwords=args.stopwords, mask=args.mask,
         width=args.width, height=args.height, font_path=args.font_path,
         margin=args.margin, relative_scaling=args.relative_scaling,
-        color_func=args.color_func, background_color=args.background_color).generate(args.text)
+        color_func=args.color_func, background_color=args.background_color,freq=args.freq).generate(args.text)
     image = wordcloud.to_image()
 
     with args.imagefile:
@@ -45,6 +45,8 @@ def parse_args(arguments):
         metavar='width', help='spacing to leave around words')
     parser.add_argument('--width', type=int, default=400,
         metavar='width', help='define output image width')
+    parser.add_argument('--freq',  type=bool, default=False,
+        help='specify file of words frequency(\"word\" count) to build the word cloud (default: stdin)')
     parser.add_argument('--height', type=int, default=200,
         metavar='height', help='define output image height')
     parser.add_argument('--color', metavar='color',
@@ -57,7 +59,7 @@ def parse_args(arguments):
         raise ValueError('specify either a color mask or a color function')
 
     with args.text:
-        args.text = args.text.read()
+      args.text=args.text.read()
 
     if args.stopwords:
         with args.stopwords:

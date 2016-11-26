@@ -268,7 +268,7 @@ class WordCloud(object):
                  stopwords=None, random_state=None, background_color='black',
                  max_font_size=None, font_step=1, mode="RGB",
                  relative_scaling=.5, regexp=None, collocations=True,
-                 colormap=None, normalize_plurals=True):
+                 colormap=None, normalize_plurals=True,freq=True):
         if font_path is None:
             font_path = FONT_PATH
         if color_func is None and colormap is None:
@@ -300,6 +300,7 @@ class WordCloud(object):
         self.background_color = background_color
         self.max_font_size = max_font_size
         self.mode = mode
+        self.freq=freq
         if relative_scaling < 0 or relative_scaling > 1:
             raise ValueError("relative_scaling needs to be "
                              "between 0 and 1, got %f." % relative_scaling)
@@ -425,6 +426,7 @@ class WordCloud(object):
             tried_other_orientation = False
             while True:
                 # try to find a position
+                font_size=int(font_size)
                 font = ImageFont.truetype(self.font_path, font_size)
                 # transpose font optionally
                 transposed_font = ImageFont.TransposedFont(
@@ -498,26 +500,34 @@ class WordCloud(object):
         include all those things.
         """
 
-        stopwords = set(map(str.lower, self.stopwords))
+        if(not self.freq):
+          stopwords = set(map(str.lower, self.stopwords))
 
-        flags = (re.UNICODE if sys.version < '3' and type(text) is unicode
-                 else 0)
-        regexp = self.regexp if self.regexp is not None else r"\w[\w']+"
+          flags = (re.UNICODE if sys.version < '3' and type(text) is unicode
+                   else 0)
+          regexp = self.regexp if self.regexp is not None else r"\w[\w']+"
 
-        words = re.findall(regexp, text, flags)
-        # remove stopwords
-        words = [word for word in words if word.lower() not in stopwords]
-        # remove 's
-        words = [word[:-2] if word.lower().endswith("'s") else word
-                 for word in words]
-        # remove numbers
-        words = [word for word in words if not word.isdigit()]
+          words = re.findall(regexp, text, flags)
+          # remove stopwords
+          words = [word for word in words if word.lower() not in stopwords]
+          # remove 's
+          words = [word[:-2] if word.lower().endswith("'s") else word
+                   for word in words]
+          # remove numbers
+          words = [word for word in words if not word.isdigit()]
 
-        if self.collocations:
-            word_counts = unigrams_and_bigrams(words, self.normalize_plurals)
-        else:
-            word_counts, _ = process_tokens(words, self.normalize_plurals)
+          if self.collocations:
+              word_counts = unigrams_and_bigrams(words, self.normalize_plurals)
+          else:
+              word_counts, _ = process_tokens(words, self.normalize_plurals)
+          return word_counts
 
+        lines=text.split("\n")
+        word_counts={}
+        for l in lines:
+          if(l!=""):
+            s=l.split("\" ")
+            word_counts[s[0][1:]]=int(s[1])
         return word_counts
 
     def generate_from_text(self, text):
